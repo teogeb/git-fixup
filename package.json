@@ -1,0 +1,58 @@
+{
+  "name": "git-fixup",
+  "displayName": "Git Fixup",
+  "version": "1.0.0",
+  "publisher": "gebhard",
+  "description": "Manage git fix-up commits easily",
+  "categories": [
+    "Other"
+  ],
+  "icon": "images/logo.png",
+  "galleryBanner": {
+    "color": "#2EB957",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "activationEvents": [],
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "git-fixup.amendStagedChanges",
+        "title": "Git Fixup: Amend Staged Changes"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "git-fixup.amendStagedChanges",
+        "key": "ctrl+alt+shift+f",
+        "mac": "cmd+alt+shift+f",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.x",
+    "@types/vscode": "^1.96.0",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.16.0",
+    "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teogeb/git-fixup.git"
+  }
+}
