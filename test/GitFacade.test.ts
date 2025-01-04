@@ -11,6 +11,16 @@ describe('GitFacade', () => {
     let git: SimpleGit
     let repoDirectory: string
 
+    const configureGit = async () => {
+        const configs = {
+            'user.name': 'Test User',
+            'user.email': 'test@test.test'
+        }
+        for (const [key, value] of Object.entries(configs)) {
+            await git.addConfig(key, value)
+        }
+    }
+
     const modifyFileAndStageChanges = async (fileContent: string): Promise<void> => {
         const fileName = path.join(repoDirectory, 'file.txt')
         await fs.writeFile(fileName, fileContent)
@@ -25,7 +35,8 @@ describe('GitFacade', () => {
     beforeEach(async () => {
         repoDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'temp-repo-'))
         git = simpleGit(repoDirectory)
-        await git.init()
+        await git.init(['-b', 'main'])
+        await configureGit()
         await createCommit('lorem\n\n', 'commit 1')
         await createCommit('lorem\n\n\n\nipsum\n\n', 'commit 2')
         await createCommit('lorem\n\n\n\nipsum\n\n\n\ndolor', 'commit 3')
