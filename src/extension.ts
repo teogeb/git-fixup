@@ -41,11 +41,11 @@ export const activate = (context: vscode.ExtensionContext): void => {
             const commitsNotInUpstream = await git.getCommitsNotInUpstream()
             const commitChoices = selectableCommits.map((commit: Commit) => {
                 const isInUpstream = (commitsNotInUpstream !== NO_UPSTREAM) && (commitsNotInUpstream.find((upstreamCommit) => upstreamCommit.hash === commit.hash) === undefined)
-                const shortMessage = commit.message
+                const messageSubject = commit.subject
                 return {
-                    label: `${isInUpstream ? '$(cloud)' : '$(git-commit)'} ${shortMessage}`,
+                    label: `${isInUpstream ? '$(cloud)' : '$(git-commit)'} ${messageSubject}`,
                     hash: commit.hash,
-                    shortMessage,
+                    messageSubject,
                     isInUpstream: isInUpstream
                 }
             })
@@ -65,8 +65,8 @@ export const activate = (context: vscode.ExtensionContext): void => {
                     vscode.window.showErrorMessage('Merge conflict\n\nResolve the conflict manually, then use Git: Commit (Amend) to commit the changes.\n', { modal: true })
                     return 
                 }
-                const fixedCommitHash = await git.getLatestFixedCommit()
-                const successMessage = `Fixed: ${selectedCommit.hash}->${fixedCommitHash} - ${selectedCommit.shortMessage}`
+                const fixedCommit = await git.getLatestFixedCommit()
+                const successMessage = `Fixed: ${selectedCommit.hash}->${fixedCommit.hash} - ${selectedCommit.messageSubject}`
                 writeToOutputChannel(successMessage)
                 vscode.window.showInformationMessage(successMessage)
             }
