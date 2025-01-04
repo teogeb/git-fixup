@@ -7,10 +7,10 @@ export default tseslint.config(
     tseslint.configs.stylistic,
     {
         rules: {
-            'curly': 'warn',
+            'curly': 'error',
             'eol-last': ['error', 'always'],
-            'eqeqeq': 'warn',
-            'no-throw-literal': 'warn',
+            'eqeqeq': 'error',
+            'no-throw-literal': 'error',
             'quotes': ['error', 'single'],
             'semi': ["error", "never"],
             '@typescript-eslint/naming-convention': ['warn', {
