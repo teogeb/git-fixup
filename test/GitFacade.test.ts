@@ -67,4 +67,12 @@ describe('GitFacade', () => {
         expect(commits.map((c) => c.hash.length)).toEqual([expectedLength, expectedLength, expectedLength])
         expect(commits.map((c) => c.subject)).toEqual(['subject 3', 'subject 2', 'subject 1'])
     })
+
+    it('hasStagedFiles()', async () => {
+        expect(await facade.hasStagedFiles()).toBe(false)
+        await modifyFileAndStageChanges('foobar')
+        expect(await facade.hasStagedFiles()).toBe(true)
+        await git.commit('-')
+        expect(await facade.hasStagedFiles()).toBe(false)
+    })
 })

@@ -15,9 +15,9 @@ export class GitFacade {
         this.git.cwd(path)
     }
 
-    async getStagedFiles(): Promise<string[]> {
+    async hasStagedFiles(): Promise<boolean> {
         const diff = await this.git.diff(['--name-only', '--cached']);
-        return diff.split('\n').filter((line) => line !== '')
+        return (diff.trim() !== '')
     }
 
     async getCurrentBranch(): Promise<BranchName> {
