@@ -60,7 +60,7 @@ export class GitFacade {
     }
 
     async getLatestFixedCommit(): Promise<Commit> {
-        return (await this.queryCommits('--grep-reflog=rebase \(fixup\)', '--walk-reflogs', '-1'))[0]
+        return (await this.queryCommits('--grep-reflog=rebase (fixup)', '--walk-reflogs', '-1'))[0]
     }
 
     private async queryCommits(...args: string[]): Promise<Commit[]> {
