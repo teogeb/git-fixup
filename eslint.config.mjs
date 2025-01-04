@@ -14,7 +14,7 @@ export default tseslint.config(
             'curly': 'warn',
             'eqeqeq': 'warn',
             'no-throw-literal': 'warn',
-            'semi': 'off',
+            'semi': ['error', 'never'],
             'quotes': ['error', 'single']
         }
     }
