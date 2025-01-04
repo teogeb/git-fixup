@@ -21,5 +21,7 @@ jobs:
         run: npm ci
       - name: Run lint
         run: npm run lint
-      - name: Run tests
+      - name: Run unit tests
         run: npm run test
+      - name: Run packaging smoke test
+        run: npx @vscode/vsce package
