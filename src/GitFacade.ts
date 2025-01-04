@@ -16,7 +16,7 @@ export class GitFacade {
     }
 
     async hasStagedFiles(): Promise<boolean> {
-        const diff = await this.git.diff(['--name-only', '--cached']);
+        const diff = await this.git.diff(['--name-only', '--cached'])
         return (diff.trim() !== '')
     }
 
