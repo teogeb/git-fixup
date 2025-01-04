@@ -28,14 +28,14 @@ export class GitFacade {
     async getMainBranch(): Promise<BranchName> {
         const CANDIDATES = ['main', 'master']
         for (const candidate of CANDIDATES) {
-            if (await this.doesBranchExist(candidate)) {
+            if (await this.hasBranch(candidate)) {
                 return candidate
             }
         }
         throw new Error('No main branch')
     }
 
-    async doesBranchExist(name: BranchName): Promise<boolean> {
+    private async hasBranch(name: BranchName): Promise<boolean> {
         const result = await this.git.raw(['branch', '-l', name])
         return (result.trim() !== '') 
     }
