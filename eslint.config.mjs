@@ -7,16 +7,16 @@ export default tseslint.config(
     tseslint.configs.stylistic,
     {
         rules: {
+            'curly': 'warn',
+            'eol-last': ['error', 'always'],
+            'eqeqeq': 'warn',
+            'no-throw-literal': 'warn',
+            'quotes': ['error', 'single'],
+            'semi': ["error", "never"],
             '@typescript-eslint/naming-convention': ['warn', {
                 selector: 'import',
                 format: ['camelCase', 'PascalCase']
-            }],
-            'curly': 'warn',
-            'eqeqeq': 'warn',
-            'no-throw-literal': 'warn',
-            'semi': ['error', 'never'],
-            'quotes': ['error', 'single'],
-            'eol-last': ['error', 'always']
+            }]
         }
     }
 )
