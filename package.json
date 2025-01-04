@@ -36,8 +36,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./tsconfig.compile.json",
-    "watch": "tsc -watch -p ./tsconfig.compile.json",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
     "test": "jest test/*.test.ts",
     "lint": "eslint src test"
   },
