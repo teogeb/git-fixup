@@ -36,11 +36,13 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src"
+    "compile": "tsc -p ./tsconfig.compile.json",
+    "watch": "tsc -watch -p ./tsconfig.compile.json",
+    "test": "jest test/*.test.ts",
+    "lint": "eslint src test"
   },
   "dependencies": {
+    "@types/jest": "^29.5.14",
     "simple-git": "^3.27.0"
   },
   "devDependencies": {
@@ -49,6 +51,8 @@
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "eslint": "^9.16.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.7.2"
   },
   "repository": {
