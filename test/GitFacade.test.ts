@@ -3,7 +3,6 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { GitFacade } from '../src/GitFacade'
-import { toShortHash } from '../src/utils'
 
 describe('GitFacade', () => {
 
@@ -37,9 +36,9 @@ describe('GitFacade', () => {
         git = simpleGit(repoDirectory)
         await git.init(['-b', 'main'])
         await configureGit()
-        await createCommit('lorem\n\n', 'commit 1')
-        await createCommit('lorem\n\n\n\nipsum\n\n', 'commit 2')
-        await createCommit('lorem\n\n\n\nipsum\n\n\n\ndolor', 'commit 3')
+        await createCommit('lorem\n\n', 'subject 1')
+        await createCommit('lorem\n\n\n\nipsum\n\n', 'subject 2')
+        await createCommit('lorem\n\n\n\nipsum\n\n\n\ndolor', 'subject 3\n\nbody test')
         facade = new GitFacade()
         facade.updateWorkingDirectory(repoDirectory)
     })
@@ -52,19 +51,20 @@ describe('GitFacade', () => {
         await facade.commitFixup(fixableCommit.hash)
         const isMergeConflict = await facade.rebaseFixupCommit(fixableCommit.hash)
         expect(isMergeConflict).toBe(false)
-        const fixedCommitHash = await facade.getLatestFixedCommit()
+        const fixedCommit = await facade.getLatestFixedCommit()
         const commitsAfter = await facade.getMainBranchCommits('main')
-        expect(toShortHash(commitsAfter[FIXABLE_COMMIT_INDEX].hash)).toEqual(fixedCommitHash)
-        const fixedCommitDiff = await git.raw(['diff', '-U0', `${fixedCommitHash}~`, `${fixedCommitHash}`])
+        expect(commitsAfter[FIXABLE_COMMIT_INDEX].hash).toEqual(fixedCommit.hash)
+        const fixedCommitDiff = await git.raw(['diff', '-U0', `${fixedCommit.hash}~`, `${fixedCommit.hash}`])
         expect(fixedCommitDiff).toContain('+\n+\n+foobar\n+\n')
-        const fixupCommitDiff = await git.raw(['diff', '-U0', `${fixableCommit.hash}`, `${fixedCommitHash}`])
+        const fixupCommitDiff = await git.raw(['diff', '-U0', `${fixableCommit.hash}`, `${fixedCommit.hash}`])
         expect(fixupCommitDiff).toContain('-ipsum\n+foobar\n')
     })
 
     it('getMainBranchCommits()', async () => {
         const commits = await facade.getMainBranchCommits('main')
         expect(commits).toHaveLength(3)
-        expect(commits.map((c) => c.hash.length)).toEqual([40, 40, 40])
-        expect(commits.map((c) => c.message)).toEqual(['commit 3', 'commit 2', 'commit 1'])
+        const expectedLength = (await git.raw(['rev-parse', '--short', 'HEAD'])).trim().length
+        expect(commits.map((c) => c.hash.length)).toEqual([expectedLength, expectedLength, expectedLength])
+        expect(commits.map((c) => c.subject)).toEqual(['subject 3', 'subject 2', 'subject 1'])
     })
 })

@@ -1,7 +1,6 @@
 import * as vscode from 'vscode'
 import { GitFacade, NO_UPSTREAM } from './GitFacade'
 import { Commit } from './types'
-import { toShortCommitMessage, toShortHash } from './utils'
 
 export const activate = (context: vscode.ExtensionContext): void => {
 
@@ -42,11 +41,11 @@ export const activate = (context: vscode.ExtensionContext): void => {
             const commitsNotInUpstream = await git.getCommitsNotInUpstream()
             const commitChoices = selectableCommits.map((commit: Commit) => {
                 const isInUpstream = (commitsNotInUpstream !== NO_UPSTREAM) && (commitsNotInUpstream.find((upstreamCommit) => upstreamCommit.hash === commit.hash) === undefined)
-                const shortMessage = toShortCommitMessage(commit.message)
+                const messageSubject = commit.subject
                 return {
-                    label: `${isInUpstream ? '$(cloud)' : '$(git-commit)'} ${shortMessage}`,
+                    label: `${isInUpstream ? '$(cloud)' : '$(git-commit)'} ${messageSubject}`,
                     hash: commit.hash,
-                    shortMessage,
+                    messageSubject,
                     isInUpstream: isInUpstream
                 }
             })
@@ -62,12 +61,12 @@ export const activate = (context: vscode.ExtensionContext): void => {
                 await git.commitFixup(selectedCommit.hash)
                 const isMergeConflict = await git.rebaseFixupCommit(selectedCommit.hash)
                 if (isMergeConflict) {
-                    writeToOutputChannel(`Merge conflict while fixing ${toShortHash(selectedCommit.hash)}`)
+                    writeToOutputChannel(`Merge conflict while fixing ${selectedCommit.hash}`)
                     vscode.window.showErrorMessage('Merge conflict\n\nResolve the conflict manually, then use Git: Commit (Amend) to commit the changes.\n', { modal: true })
                     return 
                 }
-                const fixedCommitHash = await git.getLatestFixedCommit()
-                const successMessage = `Fixed: ${toShortHash(selectedCommit.hash)}->${toShortHash(fixedCommitHash)} - ${selectedCommit.shortMessage}`
+                const fixedCommit = await git.getLatestFixedCommit()
+                const successMessage = `Fixed: ${selectedCommit.hash}->${fixedCommit.hash} - ${selectedCommit.messageSubject}`
                 writeToOutputChannel(successMessage)
                 vscode.window.showInformationMessage(successMessage)
             }

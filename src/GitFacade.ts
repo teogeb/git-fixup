@@ -1,5 +1,5 @@
 import simpleGit, { SimpleGit } from 'simple-git'
-import { BranchName, Commit, CommitHash } from './types'
+import { BranchName, Commit, ShortCommitHash } from './types'
 
 export const NO_UPSTREAM = 'NO_UPSTREAM'
 
@@ -13,6 +13,11 @@ export class GitFacade {
 
     updateWorkingDirectory(path: string): void {
         this.git.cwd(path)
+    }
+
+    async getStagedFiles(): Promise<string[]> {
+        const diff = await this.git.diff(['--name-only', '--cached']);
+        return diff.split('\n').filter((line) => line !== '')
     }
 
     async getCurrentBranch(): Promise<BranchName> {
@@ -36,16 +41,16 @@ export class GitFacade {
     }
 
     async getFeatureBranchCommits(featureBranch: BranchName, mainBranch: BranchName): Promise<readonly Commit[]> {
-        return (await this.git.log([featureBranch, '--not', mainBranch])).all
+        return this.queryCommits(featureBranch, '--not', mainBranch)
     }
 
     async getMainBranchCommits(mainBranch: BranchName): Promise<readonly Commit[]> {
-        return (await this.git.log([mainBranch])).all
+        return await this.queryCommits(mainBranch)
     }
-    
+
     async getCommitsNotInUpstream(): Promise<readonly Commit[] | typeof NO_UPSTREAM> { 
         try {
-            return (await this.git.log(['@{u}..'])).all
+            return (await this.queryCommits('@{u}..'))
         } catch (e: any) {
             if (e.message?.includes('no upstream configured')) {
                 return NO_UPSTREAM
@@ -53,21 +58,31 @@ export class GitFacade {
             throw e
         }
     }
-    
-    async getStagedFiles(): Promise<string[]> {
-        const diff = await this.git.diff(['--name-only', '--cached']);
-        return diff.split('\n').filter((line) => line !== '')
+
+    async getLatestFixedCommit(): Promise<Commit> {
+        return (await this.queryCommits('-g', '-1', '--grep-reflog=rebase \(fixup\)'))[0]
     }
 
-    async commitFixup(hash: CommitHash): Promise<void> {
+    private async queryCommits(...args: string[]): Promise<Commit[]> {
+        const lines = (await this.git.raw(['log', ...args, '--format=%h %s'])).trim().split('\n')
+        return lines.map((line) => {
+            const separatorIndex = line.indexOf(' ')
+            const hash = line.slice(0, separatorIndex)
+            const subject = line.slice(separatorIndex + 1)
+            return { hash, subject }
+        })
+    }
+
+
+    async commitFixup(hash: ShortCommitHash): Promise<void> {
         await this.git.commit('', undefined, { '--fixup': hash })
     }
 
-    async rebaseFixupCommit(hash: CommitHash): Promise<boolean> {
+    async rebaseFixupCommit(hash: ShortCommitHash): Promise<boolean> {
         try {
             await this.git.env({ 
                 ...process.env, 
-                GIT_SEQUENCE_EDITOR: 'true' // Bypass the interactive editor
+                GIT_SEQUENCE_EDITOR: 'true'  // bypass the interactive editor
             }).rebase(['--autosquash', '--autostash', '-i', `${hash}~`])
             return false
         } catch (e: any) {
@@ -76,9 +91,5 @@ export class GitFacade {
             }
             throw e
         }
-    }
-
-    async getLatestFixedCommit(): Promise<CommitHash> {
-        return await this.git.raw(['log', '-g', '-1', '--grep-reflog=rebase \(fixup\)', '--pretty=format:%h'])
     }
 }

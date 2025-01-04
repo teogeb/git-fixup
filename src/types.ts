@@ -1,8 +1,8 @@
-export type CommitHash = string
+export type ShortCommitHash = string
 
 export type BranchName = string
 
 export interface Commit {
-    hash: CommitHash
-    message: string
+    hash: ShortCommitHash
+    subject: string
 }
