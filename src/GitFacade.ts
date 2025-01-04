@@ -79,6 +79,6 @@ export class GitFacade {
     }
 
     async getLatestFixedCommit(): Promise<CommitHash> {
-        return await this.git.raw(['log', '-g', '-1', '--grep-reflog=rebase \(fixup\)', '--pretty=format:%h'])
+        return await this.git.raw(['log', '-g', '-1', '--grep-reflog=rebase \(fixup\)', '--format=%h'])
     }
 }
