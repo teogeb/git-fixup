@@ -1,5 +1,5 @@
 import simpleGit, { SimpleGit } from 'simple-git'
-import { BranchName, Commit, CommitHash } from './types'
+import { BranchName, Commit, ShortCommitHash } from './types'
 
 export const NO_UPSTREAM = 'NO_UPSTREAM'
 
@@ -74,11 +74,11 @@ export class GitFacade {
     }
 
 
-    async commitFixup(hash: CommitHash): Promise<void> {
+    async commitFixup(hash: ShortCommitHash): Promise<void> {
         await this.git.commit('', undefined, { '--fixup': hash })
     }
 
-    async rebaseFixupCommit(hash: CommitHash): Promise<boolean> {
+    async rebaseFixupCommit(hash: ShortCommitHash): Promise<boolean> {
         try {
             await this.git.env({ 
                 ...process.env, 
