@@ -15,6 +15,11 @@ export class GitFacade {
         this.git.cwd(path)
     }
 
+    async getStagedFiles(): Promise<string[]> {
+        const diff = await this.git.diff(['--name-only', '--cached']);
+        return diff.split('\n').filter((line) => line !== '')
+    }
+
     async getCurrentBranch(): Promise<BranchName> {
         const branchSummary = await this.git.branch()
         return branchSummary.current
@@ -53,10 +58,9 @@ export class GitFacade {
             throw e
         }
     }
-    
-    async getStagedFiles(): Promise<string[]> {
-        const diff = await this.git.diff(['--name-only', '--cached']);
-        return diff.split('\n').filter((line) => line !== '')
+
+    async getLatestFixedCommit(): Promise<CommitHash> {
+        return await this.git.raw(['log', '-g', '-1', '--grep-reflog=rebase \(fixup\)', '--format=%h'])
     }
 
     async commitFixup(hash: CommitHash): Promise<void> {
@@ -76,9 +80,5 @@ export class GitFacade {
             }
             throw e
         }
-    }
-
-    async getLatestFixedCommit(): Promise<CommitHash> {
-        return await this.git.raw(['log', '-g', '-1', '--grep-reflog=rebase \(fixup\)', '--format=%h'])
     }
 }
