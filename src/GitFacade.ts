@@ -82,7 +82,7 @@ export class GitFacade {
         try {
             await this.git.env({ 
                 ...process.env, 
-                GIT_SEQUENCE_EDITOR: 'true' // Bypass the interactive editor
+                GIT_SEQUENCE_EDITOR: 'true'  // bypass the interactive editor
             }).rebase(['--autosquash', '--autostash', '-i', `${hash}~`])
             return false
         } catch (e: any) {
