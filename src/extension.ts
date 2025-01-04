@@ -21,8 +21,8 @@ export const activate = (context: vscode.ExtensionContext): void => {
             }
             git.updateWorkingDirectory(workspaceFolder)
 
-            const stagedFiles = await git.getStagedFiles()
-            if (stagedFiles.length === 0) {
+            const hasStagedFiles = await git.hasStagedFiles()
+            if (!hasStagedFiles) {
                 vscode.window.showErrorMessage('No staged files')
                 return
             }
