@@ -70,7 +70,7 @@ export const activate = (context: vscode.ExtensionContext): void => {
                 writeToOutputChannel(successMessage)
                 vscode.window.showInformationMessage(successMessage)
             }
-        } catch (error: any) {
+        } catch (error) {
             vscode.window.showErrorMessage(error.message)
         }
     })
