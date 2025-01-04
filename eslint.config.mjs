@@ -15,7 +15,8 @@ export default tseslint.config(
             'eqeqeq': 'warn',
             'no-throw-literal': 'warn',
             'semi': ['error', 'never'],
-            'quotes': ['error', 'single']
+            'quotes': ['error', 'single'],
+            'eol-last': ['error', 'always']
         }
     }
 )
