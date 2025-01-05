@@ -5,6 +5,8 @@ The **Git Fixup** is a lightweight VS Code extension that simplifies the process
 
 This extension helps developers to streamline their Git workflows and keep commit histories clean and organized.
 
+![Demo video](https://raw.githubusercontent.com/teogeb/git-fixup/main/images/demo.gif)
+
 ## Features
 
 - **Select Commit for Fix-Up**: Choose any commit from the current branch to apply staged changes as a fix-up.
