@@ -16,7 +16,7 @@ export class GitFacade {
     }
 
     async hasStagedFiles(): Promise<boolean> {
-        const diff = await this.git.diff(['--name-only', '--cached']);
+        const diff = await this.git.diff(['--name-only', '--cached'])
         return (diff.trim() !== '')
     }
 
@@ -51,7 +51,7 @@ export class GitFacade {
     async getCommitsNotInUpstream(): Promise<readonly Commit[] | typeof NO_UPSTREAM> { 
         try {
             return (await this.queryCommits('@{u}..'))
-        } catch (e: any) {
+        } catch (e) {
             if (e.message?.includes('no upstream configured')) {
                 return NO_UPSTREAM
             }
@@ -85,7 +85,7 @@ export class GitFacade {
                 GIT_SEQUENCE_EDITOR: 'true'  // bypass the interactive editor
             }).rebase(['--autosquash', '--autostash', '-i', `${hash}~`])
             return false
-        } catch (e: any) {
+        } catch (e) {
             if (e.message?.includes('Merge conflict')) {
                 return true
             }
