@@ -68,11 +68,24 @@ describe('GitFacade', () => {
         expect(commits.map((c) => c.subject)).toEqual(['subject 3', 'subject 2', 'subject 1'])
     })
 
-    it('hasStagedFiles()', async () => {
-        expect(await facade.hasStagedFiles()).toBe(false)
+    it('getFeatureBranchCommits()', async () => {
+        const branchName = `feature-${Date.now()}`
+        await git.checkoutLocalBranch(branchName)
+        expect(await facade.getFeatureBranchCommits(branchName, 'main')).toHaveLength(0)
+        await createCommit('foo', 'bar')
+        expect(await facade.getFeatureBranchCommits(branchName, 'main')).toHaveLength(1)
+    })
+
+    it('getStagedFiles()', async () => {
+        expect(await facade.getStagedFiles()).toEqual([])
         await modifyFileAndStageChanges('foobar')
-        expect(await facade.hasStagedFiles()).toBe(true)
+        expect(await facade.getStagedFiles()).toEqual(['file.txt'])
         await git.commit('-')
-        expect(await facade.hasStagedFiles()).toBe(false)
+        expect(await facade.getStagedFiles()).toEqual([])
+    })
+
+    it('getModifiedFiles()', async () => {
+        const hash = (await git.raw(['rev-parse', '--short', 'HEAD'])).trim()
+        expect(await facade.getModifiedFiles(hash)).toEqual(['file.txt'])
     })
 })

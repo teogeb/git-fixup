@@ -3,6 +3,15 @@ import { BranchName, Commit, ShortCommitHash } from './types'
 
 export const NO_UPSTREAM = 'NO_UPSTREAM'
 
+const toLines = (output: string): string[] => {
+    const trimmed = output.replace(/\n$/, '')
+    if (trimmed !== '') {
+        return trimmed.split('\n')
+    } else {
+        return []
+    }
+}
+
 export class GitFacade {
 
     private readonly git: SimpleGit 
@@ -13,11 +22,6 @@ export class GitFacade {
 
     updateWorkingDirectory(path: string): void {
         this.git.cwd(path)
-    }
-
-    async hasStagedFiles(): Promise<boolean> {
-        const diff = await this.git.diff(['--name-only', '--cached'])
-        return (diff.trim() !== '')
     }
 
     async getCurrentBranch(): Promise<BranchName> {
@@ -64,7 +68,7 @@ export class GitFacade {
     }
 
     private async queryCommits(...args: string[]): Promise<Commit[]> {
-        const lines = (await this.git.raw(['log', ...args, '--format=%h %s'])).trim().split('\n')
+        const lines = toLines(await this.git.raw(['log', ...args, '--format=%h %s']))
         return lines.map((line) => {
             const separatorIndex = line.indexOf(' ')
             const hash = line.slice(0, separatorIndex)
@@ -72,7 +76,6 @@ export class GitFacade {
             return { hash, subject }
         })
     }
-
 
     async commitFixup(hash: ShortCommitHash): Promise<void> {
         await this.git.commit('', undefined, { '--fixup': hash })
@@ -91,5 +94,13 @@ export class GitFacade {
             }
             throw e
         }
+    }
+
+    async getStagedFiles(): Promise<string[]> {
+        return toLines(await this.git.diff(['--cached', '--name-only']))
+    }
+
+    async getModifiedFiles(hash: ShortCommitHash): Promise<string[]> {
+        return toLines(await this.git.raw(['show', '--name-only', '--pretty=format:', hash]))
     }
 }
