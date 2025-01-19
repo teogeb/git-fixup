@@ -77,7 +77,6 @@ export class GitFacade {
         })
     }
 
-
     async commitFixup(hash: ShortCommitHash): Promise<void> {
         await this.git.commit('', undefined, { '--fixup': hash })
     }
