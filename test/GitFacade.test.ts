@@ -68,11 +68,11 @@ describe('GitFacade', () => {
         expect(commits.map((c) => c.subject)).toEqual(['subject 3', 'subject 2', 'subject 1'])
     })
 
-    it('hasStagedFiles()', async () => {
-        expect(await facade.hasStagedFiles()).toBe(false)
+    it('getStagedFiles()', async () => {
+        expect(await facade.getStagedFiles()).toEqual([])
         await modifyFileAndStageChanges('foobar')
-        expect(await facade.hasStagedFiles()).toBe(true)
+        expect(await facade.getStagedFiles()).toEqual(['file.txt'])
         await git.commit('-')
-        expect(await facade.hasStagedFiles()).toBe(false)
+        expect(await facade.getStagedFiles()).toEqual([])
     })
 })

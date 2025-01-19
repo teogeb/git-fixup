@@ -3,6 +3,15 @@ import { BranchName, Commit, ShortCommitHash } from './types'
 
 export const NO_UPSTREAM = 'NO_UPSTREAM'
 
+const toLines = (output: string): string[] => {
+    const trimmed = output.replace(/\n$/, '')
+    if (trimmed !== '') {
+        return trimmed.split('\n')
+    } else {
+        return []
+    }
+}
+
 export class GitFacade {
 
     private readonly git: SimpleGit 
@@ -13,11 +22,6 @@ export class GitFacade {
 
     updateWorkingDirectory(path: string): void {
         this.git.cwd(path)
-    }
-
-    async hasStagedFiles(): Promise<boolean> {
-        const diff = await this.git.diff(['--name-only', '--cached'])
-        return (diff.trim() !== '')
     }
 
     async getCurrentBranch(): Promise<BranchName> {
@@ -91,5 +95,9 @@ export class GitFacade {
             }
             throw e
         }
+    }
+
+    async getStagedFiles(): Promise<string[]> {
+        return toLines(await this.git.diff(['--cached', '--name-only']))
     }
 }
