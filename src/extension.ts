@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 import { GitFacade, NO_UPSTREAM } from './GitFacade'
-import { Commit } from './types'
 
 export const activate = (context: vscode.ExtensionContext): void => {
 
@@ -9,6 +8,25 @@ export const activate = (context: vscode.ExtensionContext): void => {
     const outputChannel = vscode.window.createOutputChannel('Git Fixup')
     const writeToOutputChannel = (message: string) => {
         outputChannel.appendLine(`${new Date().toISOString()}   ${message}`)
+    }
+
+    const getCommitIcon = (isInUpstream: boolean, isHighlighted: boolean): vscode.IconPath => {
+        const getThemeIconUri = (theme: 'light' | 'dark'): vscode.Uri => {
+            const fileNameParts: string[] = []
+            fileNameParts.push('commit')
+            fileNameParts.push(theme)
+            if (isInUpstream) {
+                fileNameParts.push('upstream')
+            }
+            if (isHighlighted) {
+                fileNameParts.push('highlighted')
+            }
+            return vscode.Uri.joinPath(context.extensionUri, 'images', `${fileNameParts.join('-')}.svg`)
+        }
+        return {
+            light: getThemeIconUri('light'),
+            dark: getThemeIconUri('dark')
+        }
     }
 
     const disposable = vscode.commands.registerCommand('git-fixup.amendStagedChanges', async () => {
@@ -39,16 +57,19 @@ export const activate = (context: vscode.ExtensionContext): void => {
             }
 
             const commitsNotInUpstream = await git.getCommitsNotInUpstream()
-            const commitChoices = selectableCommits.map((commit: Commit) => {
+            const commitChoices = await Promise.all((selectableCommits.map(async (commit) => {
                 const isInUpstream = (commitsNotInUpstream !== NO_UPSTREAM) && (commitsNotInUpstream.find((upstreamCommit) => upstreamCommit.hash === commit.hash) === undefined)
+                const modifiedFiles = await git.getModifiedFiles(commit.hash)
+                const isHighlighted = modifiedFiles.some((filePath) => stagedFiles.includes(filePath))
                 const messageSubject = commit.subject
                 return {
-                    label: `${isInUpstream ? '$(cloud)' : '$(git-commit)'} ${messageSubject}`,
+                    iconPath: getCommitIcon(isInUpstream, isHighlighted),
+                    label: `  ${messageSubject}`,
                     hash: commit.hash,
                     messageSubject,
-                    isInUpstream: isInUpstream
+                    isInUpstream
                 }
-            })
+            })))
             const selectedCommit = await vscode.window.showQuickPick(commitChoices, { placeHolder: 'Select a Git commit to fix up' })
 
             if (selectedCommit !== undefined) {
