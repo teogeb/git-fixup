@@ -68,7 +68,7 @@ export class GitFacade {
     }
 
     private async queryCommits(...args: string[]): Promise<Commit[]> {
-        const lines = (await this.git.raw(['log', ...args, '--format=%h %s'])).trim().split('\n')
+        const lines = toLines(await this.git.raw(['log', ...args, '--format=%h %s']))
         return lines.map((line) => {
             const separatorIndex = line.indexOf(' ')
             const hash = line.slice(0, separatorIndex)
