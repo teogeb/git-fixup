@@ -83,4 +83,9 @@ describe('GitFacade', () => {
         await git.commit('-')
         expect(await facade.getStagedFiles()).toEqual([])
     })
+
+    it('getModifiedFiles()', async () => {
+        const hash = (await git.raw(['rev-parse', '--short', 'HEAD'])).trim()
+        expect(await facade.getModifiedFiles(hash)).toEqual(['file.txt'])
+    })
 })

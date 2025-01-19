@@ -99,4 +99,8 @@ export class GitFacade {
     async getStagedFiles(): Promise<string[]> {
         return toLines(await this.git.diff(['--cached', '--name-only']))
     }
+
+    async getModifiedFiles(hash: ShortCommitHash): Promise<string[]> {
+        return toLines(await this.git.raw(['show', '--name-only', '--pretty=format:', hash]))
+    }
 }
