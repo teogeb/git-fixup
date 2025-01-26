@@ -9,6 +9,7 @@ describe('GitFacade', () => {
     let facade: GitFacade
     let git: SimpleGit
     let repoDirectory: string
+    let mainBranch: string
 
     const configureGit = async () => {
         const configs = {
@@ -34,25 +35,26 @@ describe('GitFacade', () => {
     beforeEach(async () => {
         repoDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'temp-repo-'))
         git = simpleGit(repoDirectory)
-        await git.init(['-b', 'main'])
+        await git.init()
         await configureGit()
         await createCommit('lorem\n\n', 'subject 1')
         await createCommit('lorem\n\n\n\nipsum\n\n', 'subject 2')
         await createCommit('lorem\n\n\n\nipsum\n\n\n\ndolor', 'subject 3\n\nbody test')
         facade = new GitFacade()
         facade.updateWorkingDirectory(repoDirectory)
+        mainBranch = await facade.getMainBranch()
     })
 
     it('happy path', async () => {
         const FIXABLE_COMMIT_INDEX = 1
-        const commitsBefore = await facade.getMainBranchCommits('main')
+        const commitsBefore = await facade.getMainBranchCommits(mainBranch)
         const fixableCommit = commitsBefore[FIXABLE_COMMIT_INDEX]
         await modifyFileAndStageChanges('lorem\n\n\n\nfoobar\n\n')
         await facade.commitFixup(fixableCommit.hash)
         const isMergeConflict = await facade.rebaseFixupCommit(fixableCommit.hash)
         expect(isMergeConflict).toBe(false)
         const fixedCommit = await facade.getLatestFixedCommit()
-        const commitsAfter = await facade.getMainBranchCommits('main')
+        const commitsAfter = await facade.getMainBranchCommits(mainBranch)
         expect(commitsAfter[FIXABLE_COMMIT_INDEX].hash).toEqual(fixedCommit.hash)
         const fixedCommitDiff = await git.raw(['diff', '-U0', `${fixedCommit.hash}~`, `${fixedCommit.hash}`])
         expect(fixedCommitDiff).toContain('+\n+\n+foobar\n+\n')
@@ -61,7 +63,7 @@ describe('GitFacade', () => {
     })
 
     it('getMainBranchCommits()', async () => {
-        const commits = await facade.getMainBranchCommits('main')
+        const commits = await facade.getMainBranchCommits(mainBranch)
         expect(commits).toHaveLength(3)
         const expectedLength = (await git.raw(['rev-parse', '--short', 'HEAD'])).trim().length
         expect(commits.map((c) => c.hash.length)).toEqual([expectedLength, expectedLength, expectedLength])
@@ -69,11 +71,11 @@ describe('GitFacade', () => {
     })
 
     it('getFeatureBranchCommits()', async () => {
-        const branchName = `feature-${Date.now()}`
-        await git.checkoutLocalBranch(branchName)
-        expect(await facade.getFeatureBranchCommits(branchName, 'main')).toHaveLength(0)
+        const featureBranch = `feature-${Date.now()}`
+        await git.checkoutLocalBranch(featureBranch)
+        expect(await facade.getFeatureBranchCommits(featureBranch, mainBranch)).toHaveLength(0)
         await createCommit('foo', 'bar')
-        expect(await facade.getFeatureBranchCommits(branchName, 'main')).toHaveLength(1)
+        expect(await facade.getFeatureBranchCommits(featureBranch, mainBranch)).toHaveLength(1)
     })
 
     it('getStagedFiles()', async () => {
