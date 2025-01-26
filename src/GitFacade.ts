@@ -64,7 +64,8 @@ export class GitFacade {
     }
 
     async getLatestFixedCommit(): Promise<Commit> {
-        return (await this.queryCommits('--grep-reflog=rebase (fixup)', '--walk-reflogs', '-1'))[0]
+        // old Git versions (earlier than v2.26) include "-i" in the message
+        return (await this.queryCommits('--grep-reflog=rebase (fixup)', '--grep-reflog=rebase -i (fixup)', '--walk-reflogs', '-1'))[0]
     }
 
     private async queryCommits(...args: string[]): Promise<Commit[]> {
