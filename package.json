@@ -18,11 +18,16 @@
     "vscode": "^1.96.0"
   },
   "main": "./out/extension.js",
+  "enabledApiProposals": ["contribSourceControlHistoryItemMenu"],
   "contributes": {
     "commands": [
       {
         "command": "git-fixup.amendStagedChanges",
         "title": "Git Fixup: Amend Staged Changes"
+      },
+            {
+        "command": "git-fixup.amendStagedChangesToHistoryItem",
+        "title": "Amend Staged Changes"
       }
     ],
     "keybindings": [
@@ -32,7 +37,22 @@
         "mac": "cmd+alt+shift+f",
         "when": "editorTextFocus"
       }
-    ]
+    ],
+    "menus": {
+      "scm/historyItem/context": [
+        {
+          "command": "git-fixup.amendStagedChangesToHistoryItem",
+          "when": "scmProvider == git",
+          "group": "1_actions"
+        }
+      ],
+      "commandPalette": [
+        {
+         "command": "git-fixup.amendStagedChangesToHistoryItem",
+          "when": "false"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

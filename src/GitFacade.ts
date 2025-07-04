@@ -63,9 +63,18 @@ export class GitFacade {
         }
     }
 
+    async isCommitInUptream(hash: string): Promise<boolean> {
+        const result = await this.git.raw(['branch', '-r', '--contains', hash])
+        return (result.trim() !== '') 
+    }
+
     async getLatestFixedCommit(): Promise<Commit> {
         // old Git versions (earlier than v2.26) include "-i" in the message
         return (await this.queryCommits('--grep-reflog=rebase (fixup)', '--grep-reflog=rebase -i (fixup)', '--walk-reflogs', '-1'))[0]
+    }
+
+    async getCommit(hash: string): Promise<Commit> {
+        return (await this.queryCommits(hash, '-1'))[0]
     }
 
     private async queryCommits(...args: string[]): Promise<Commit[]> {

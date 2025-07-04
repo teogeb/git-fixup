@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import { GitFacade, NO_UPSTREAM } from './GitFacade'
+import { Commit } from './types'
 
 export const activate = (context: vscode.ExtensionContext): void => {
 
@@ -27,6 +28,26 @@ export const activate = (context: vscode.ExtensionContext): void => {
             light: getThemeIconUri('light'),
             dark: getThemeIconUri('dark')
         }
+    }
+
+    const amendStagedChangesToCommit = async (selectedCommit: Commit & { isInUpstream: boolean }) => {
+        if (selectedCommit.isInUpstream) {
+            const confirm = await vscode.window.showInformationMessage('The commit has been pushed to the upstream. Do you want to proceed?', 'Yes', 'No')
+            if (confirm !== 'Yes') {
+                return
+            }
+        }
+        await git.commitFixup(selectedCommit.hash)
+        const isMergeConflict = await git.rebaseFixupCommit(selectedCommit.hash)
+        if (isMergeConflict) {
+            writeToOutputChannel(`Merge conflict while fixing ${selectedCommit.hash}`)
+            vscode.window.showErrorMessage('Merge conflict\n\nResolve the conflict manually, then use Git: Commit (Amend) to commit the changes.\n', { modal: true })
+            return 
+        }
+        const fixedCommit = await git.getLatestFixedCommit()
+        const successMessage = `Fixed: ${selectedCommit.hash}->${fixedCommit.hash} - ${selectedCommit.subject}`
+        writeToOutputChannel(successMessage)
+        vscode.window.showInformationMessage(successMessage)
     }
 
     const disposable = vscode.commands.registerCommand('git-fixup.amendStagedChanges', async () => {
@@ -66,30 +87,14 @@ export const activate = (context: vscode.ExtensionContext): void => {
                     iconPath: getCommitIcon(isInUpstream, isHighlighted),
                     label: `  ${messageSubject}`,
                     hash: commit.hash,
-                    messageSubject,
+                    subject: commit.subject,
                     isInUpstream
                 }
             })))
             const selectedCommit = await vscode.window.showQuickPick(commitChoices, { placeHolder: 'Select a Git commit to fix up' })
 
             if (selectedCommit !== undefined) {
-                if (selectedCommit.isInUpstream) {
-                    const confirm = await vscode.window.showInformationMessage('The commit has been pushed to the upstream. Do you want to proceed?', 'Yes', 'No')
-                    if (confirm !== 'Yes') {
-                        return
-                    }
-                }
-                await git.commitFixup(selectedCommit.hash)
-                const isMergeConflict = await git.rebaseFixupCommit(selectedCommit.hash)
-                if (isMergeConflict) {
-                    writeToOutputChannel(`Merge conflict while fixing ${selectedCommit.hash}`)
-                    vscode.window.showErrorMessage('Merge conflict\n\nResolve the conflict manually, then use Git: Commit (Amend) to commit the changes.\n', { modal: true })
-                    return 
-                }
-                const fixedCommit = await git.getLatestFixedCommit()
-                const successMessage = `Fixed: ${selectedCommit.hash}->${fixedCommit.hash} - ${selectedCommit.messageSubject}`
-                writeToOutputChannel(successMessage)
-                vscode.window.showInformationMessage(successMessage)
+                await amendStagedChangesToCommit(selectedCommit)
             }
         } catch (error) {
             vscode.window.showErrorMessage(error.message)
@@ -97,4 +102,27 @@ export const activate = (context: vscode.ExtensionContext): void => {
     })
 
     context.subscriptions.push(disposable, outputChannel)
+
+    context.subscriptions.push(
+        // TODO explicit types for the arguments (most likely 1st is ISCMProvider and 2nd is ISCMHistoryItem)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vscode.commands.registerCommand('git-fixup.amendStagedChangesToHistoryItem', async (_: any, historyItem: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            git.updateWorkingDirectory(vscode.workspace.workspaceFolders![0]!.uri.fsPath)
+            const stagedFiles = await git.getStagedFiles()
+            if (stagedFiles.length === 0) {
+                vscode.window.showErrorMessage('No staged files')
+                return
+            }
+            const hash = historyItem.id
+            try {
+                const commit = await git.getCommit(hash)
+                const isInUpstream = await git.isCommitInUptream(hash)
+                await amendStagedChangesToCommit({ ...commit, isInUpstream })
+            } catch (error) {
+                vscode.window.showErrorMessage(error.message)
+            }
+        }),
+        outputChannel
+    )
 }
