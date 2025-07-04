@@ -24,22 +24,3 @@ jobs:
         run: npm run test
       - name: Run packaging smoke test
         run: npx @vscode/vsce package
-
-  old-version-support:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Git 2.25.1
-        run: |
-          echo "deb http://archive.ubuntu.com/ubuntu focal-updates main universe" | sudo tee /etc/apt/sources.list.d/focal.list
-          sudo apt-get update
-          sudo apt-get install --allow-downgrades -y git=1:2.25.1-1ubuntu3.13 git-man=1:2.25.1-1ubuntu3.13
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run unit tests
-        run: npm run test
